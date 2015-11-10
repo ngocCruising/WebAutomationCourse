@@ -66,37 +66,46 @@ public class PandoraTests {
         assert(tagName.equals("input"));
     }
 
-    @Test
-    public void registerPandoraAccountTest() throws InterruptedException {
+    private void createUser() {
         String baseUrl = "http://radio.stage.savagebeast.com";
         webDriver.get(baseUrl);
+        RegistrationPage registrationPage = new RegistrationPage(webDriver);
 
-        webDriver.findElement(By.linkText("register")).click();
         System.out.println("Clicking on register");
+        registrationPage.clickRegisterLink();
 
         //Wait for field forms to load up.
-        getWaiter(5).until(ExpectedConditions.elementToBeClickable(By.name("email")));
-
+        getWaiter(5).until(ExpectedConditions.elementToBeClickable(registrationPage.getEmailField()));
 
         System.out.println("Filling in form fields!");
-        webDriver.findElement(By.name("email")).sendKeys(RandomTextFieldGenerator.randomStringUserName());
-        webDriver.findElement(By.name("password")).sendKeys(LOGIN_PASSWORD);
-        webDriver.findElement(By.name("birthYear")).sendKeys(BIRTH_YEAR);
-        webDriver.findElement(By.name("zipCode")).sendKeys(ZIP_CODE);
-        webDriver.findElement(By.cssSelector("input[value='MALE']")).click();
-        webDriver.findElement(By.name("agreeTermsOfUse")).click();
-        webDriver.findElement(By.cssSelector("input[value='Register']")).click();
+        registrationPage.fillInUserRegistrationDetails(RandomTextFieldGenerator.randomStringUserName(), LOGIN_PASSWORD,
+                BIRTH_YEAR, ZIP_CODE);
 
         //Wait for congrats form to show up.
-        getWaiter(5).until(ExpectedConditions.elementToBeClickable(By.linkText("Continue")));
+        getWaiter(5).until(ExpectedConditions.elementToBeClickable(registrationPage.getContinueLink()));
         String expectedText = "Congratulations! You're now registered with Pandora";
-        String actualText = webDriver.findElement(By.className("lightbox_header")).getText();
+        String actualText = registrationPage.getCongratsText();
 
         assertEquals(expectedText, actualText);
-        webDriver.findElement(By.linkText("Continue")).click();
         System.out.println("Clicking on continue");
+        registrationPage.clickContinueLink();
 
         getWaiter(5).until(ExpectedConditions.presenceOfElementLocated(By.id("searchPopupWelcomePosition")));
+    }
+
+    @Test
+    public void registerPandoraAccountTest() {
+        createUser();
+    }
+
+    @Test
+    public void automateStationPlayWithControls() throws InterruptedException {
+        createUser();
+        webDriver.findElements(By.className("searchInput")).get(1).click();
+        webDriver.findElements(By.className("searchInput")).get(1).sendKeys("Taylor Swift");
+        webDriver.findElement(By.className("tophit")).click();
+        Thread.sleep(10000);
+
     }
 
     // Used to generate random inputs for fields for testing.
